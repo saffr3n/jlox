@@ -6,6 +6,7 @@ public class Scanner {
   private final List<Token> tokens = new ArrayList<>();
   private int start = 0;
   private int current = 0;
+  private int line = 1;
 
   Scanner(String source) {
     this.source = source;
@@ -34,6 +35,7 @@ public class Scanner {
       case '+': addToken(TokenType.PLUS);        break;
       case ';': addToken(TokenType.SEMICOLON);   break;
       case '*': addToken(TokenType.STAR);        break;
+      default: Lox.error(line, "Unexpected character");
     }
   }
 
