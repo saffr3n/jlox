@@ -1,2 +1,4 @@
-Lox.class: Lox.java
-	javac $^
+SOURCES := $(wildcard *.java)
+
+Lox.class: $(SOURCES)
+	javac Lox.java
