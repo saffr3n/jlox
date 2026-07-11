@@ -1,8 +1,17 @@
-SOURCES := $(wildcard *.java)
+GENERATOR := tool/GenerateAst
+GENERATED := Expr.java
+SOURCES   := $(wildcard *.java)
 
-Lox.class: $(SOURCES)
+Lox.class: $(GENERATED) $(SOURCES)
 	javac Lox.java
+
+$(GENERATED): $(GENERATOR).class
+	java $(GENERATOR) .
+
+$(GENERATOR).class: $(GENERATOR).java
+	javac $<
 
 .PHONY: clean
 clean:
-	rm -f *.class
+	find . -name '*.class' -delete
+	rm -f $(GENERATED)
