@@ -73,6 +73,8 @@ public class Scanner {
       case '/':
         if (match('/')) {
           while (peek() != '\n' && !isAtEnd()) advance();
+        } else if (match('*')) {
+          blockComment();
         } else {
           addToken(TokenType.SLASH);
         }
@@ -128,6 +130,22 @@ public class Scanner {
 
     String value = source.substring(start + 1, current - 1);
     addToken(TokenType.STRING, value);
+  }
+
+  private void blockComment() {
+    while ((peek() != '*' || peekNext() != '/') && !isAtEnd()) {
+      if (peek() == '\n') line++;
+      advance();
+    }
+
+    if (isAtEnd()) {
+      Lox.error(line, "Unterminated block comment");
+      return;
+    }
+
+    // Consume the */
+    advance();
+    advance();
   }
 
   private boolean match(char expected) {
