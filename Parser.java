@@ -12,10 +12,22 @@ public class Parser {
 
   public Expr parse() {
     try {
-      return factor();
+      return term();
     } catch (ParseError error) {
       return null;
     }
+  }
+
+  private Expr term() {
+    Expr expr = factor();
+
+    while (match(TokenType.MINUS, TokenType.PLUS)) {
+      Token operator = previous();
+      Expr right = factor();
+      expr = new Expr.Binary(expr, operator, right);
+    }
+
+    return expr;
   }
 
   private Expr factor() {
