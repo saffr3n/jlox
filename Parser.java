@@ -12,10 +12,20 @@ public class Parser {
 
   public Expr parse() {
     try {
-      return primary();
+      return unary();
     } catch (ParseError error) {
       return null;
     }
+  }
+
+  private Expr unary() {
+    if (match(TokenType.BANG, TokenType.MINUS)) {
+      Token operator = previous();
+      Expr right = unary();
+      return new Expr.Unary(operator, right);
+    }
+
+    return primary();
   }
 
   private Expr primary() {
