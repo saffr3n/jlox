@@ -12,10 +12,26 @@ public class Parser {
 
   public Expr parse() {
     try {
-      return comparison();
+      return expression();
     } catch (ParseError error) {
       return null;
     }
+  }
+
+  private Expr expression() {
+    return equality();
+  }
+
+  private Expr equality() {
+    Expr expr = comparison();
+
+    while (match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)) {
+      Token operator = previous();
+      Expr right = comparison();
+      expr = new Expr.Binary(expr, operator, right);
+    }
+
+    return expr;
   }
 
   private Expr comparison() {
