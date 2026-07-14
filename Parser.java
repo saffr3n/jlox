@@ -77,6 +77,22 @@ public class Parser {
       return new Expr.Unary(operator, right);
     }
 
+    if (match(
+      TokenType.BANG_EQUAL,
+      TokenType.EQUAL_EQUAL,
+      TokenType.GREATER,
+      TokenType.GREATER_EQUAL,
+      TokenType.LESS,
+      TokenType.LESS_EQUAL,
+      TokenType.PLUS,
+      TokenType.SLASH,
+      TokenType.STAR
+    )) {
+      ParseError error = error(previous(), "Expect expression before binary operator");
+      expression();
+      throw error;
+    }
+
     return primary();
   }
 
