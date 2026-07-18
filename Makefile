@@ -1,5 +1,5 @@
 GENERATOR := tool/GenerateAst
-GENERATED := Expr.java
+GENERATED := Expr.java Stmt.java
 SOURCES   := $(wildcard *.java)
 
 Lox.class: $(GENERATED) $(SOURCES)
