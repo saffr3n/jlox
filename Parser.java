@@ -5,10 +5,12 @@ public class Parser {
   private static class ParseError extends RuntimeException {}
 
   private final List<Token> tokens;
+  private String mode;
   private int current = 0;
 
-  public Parser(List<Token> tokens) {
+  public Parser(List<Token> tokens, String mode) {
     this.tokens = tokens;
+    this.mode = mode;
   }
 
   public List<Stmt> parse() {
@@ -55,11 +57,16 @@ public class Parser {
 
   private Stmt expressionStatement() {
     Expr expr = expression();
+    if (mode == "repl") {
+      if (!check(TokenType.SEMICOLON)) return new Stmt.Print(expr);
+    }
     consume(TokenType.SEMICOLON, "Expect ';' after expression");
     return new Stmt.Expression(expr);
   }
 
   private List<Stmt> block() {
+    String prevMode = mode;
+    mode = "file";
     List<Stmt> statements = new ArrayList<>();
 
     while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
@@ -67,6 +74,7 @@ public class Parser {
     }
 
     consume(TokenType.RIGHT_BRACE, "Expect '}' after block");
+    mode = prevMode;
     return statements;
   }
 
