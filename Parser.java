@@ -321,6 +321,7 @@ public class Parser {
         case PRINT:
         case RETURN:
           return;
+        default: ;
       }
 
       advance();
