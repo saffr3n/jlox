@@ -2,7 +2,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
-  private Environment globals = new Environment();
+  public Environment globals = new Environment();
   private Environment environment = globals;
 
   public Interpreter() {
@@ -239,7 +239,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     stmt.accept(this);
   }
 
-  private void executeBlock(List<Stmt> statements, Environment environment) {
+  public void executeBlock(List<Stmt> statements, Environment environment) {
     Environment previous = this.environment;
     try {
       this.environment = environment;
