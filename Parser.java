@@ -22,7 +22,10 @@ public class Parser {
 
   private Stmt declaration() {
     try {
-      if (match(TokenType.FUN)) return function("function");
+      if (match(TokenType.FUN)) {
+        if (check(TokenType.IDENTIFIER)) return function("function");
+        return expressionStatement();
+      }
       if (match(TokenType.VAR)) return varDeclaration();
       return statement();
     } catch (ParseError error) {
@@ -170,7 +173,26 @@ public class Parser {
   }
 
   private Expr expression() {
+    if (previous().type == TokenType.FUN || match(TokenType.FUN)) return lambda();
     return assignment();
+  }
+
+  private Expr lambda() {
+    consume(TokenType.LEFT_PAREN, "Expect '(' before lambda parameters");
+    List<Token> parameters = new ArrayList<>();
+    if (!check(TokenType.RIGHT_PAREN)) {
+      do {
+        if (parameters.size() >= 255) {
+          error(peek(), "Can't have more than 255 parameters");
+        }
+        parameters.add(consume(TokenType.IDENTIFIER, "Expect parameter name"));
+      } while (match(TokenType.COMMA));
+    }
+    consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters");
+
+    consume(TokenType.LEFT_BRACE, "Expect '{' before lambda body");
+    List<Stmt> body = block();
+    return new Expr.Lambda(parameters, body);
   }
 
   private Expr assignment() {
