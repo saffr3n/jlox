@@ -6,6 +6,7 @@ import java.util.Stack;
 public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   private final Interpreter interpreter;
   private final Stack<Map<String, Boolean>> scopes = new Stack<>();
+  private final Stack<Map<String, Token>> unusedLocals = new Stack<>();
   private FunctionType currentFunction = FunctionType.NONE;
 
   private enum FunctionType {
@@ -152,10 +153,14 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
   private void beginScope() {
     scopes.push(new HashMap<String, Boolean>());
+    unusedLocals.push(new HashMap<>());
   }
 
   private void endScope() {
     scopes.pop();
+    for (Token unused : unusedLocals.pop().values()) {
+      Lox.error(unused, "Unused local variable");
+    }
   }
 
   private void declare(Token name) {
@@ -164,7 +169,9 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     if (scope.containsKey(name.lexeme)) {
       Lox.error(name, "Already a variable with this name in this scope");
     }
+    Map<String, Token> locals = unusedLocals.peek();
     scope.put(name.lexeme, false);
+    locals.put(name.lexeme, name);
   }
 
   private void define(Token name) {
@@ -191,6 +198,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     for (int i = scopes.size() - 1; i >= 0; i--) {
       if (scopes.get(i).containsKey(name.lexeme)) {
         interpreter.resolve(expr, scopes.size() - 1 - i);
+        unusedLocals.get(i).remove(name.lexeme);
         return;
       }
     }
