@@ -4,12 +4,22 @@ import java.util.List;
 import java.util.Map;
 
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
-  public Environment globals = new Environment();
-  private Environment environment = globals;
-  private final Map<Expr, Integer> locals = new HashMap<>();
+  public Map<String, Object> globals = new HashMap<>();
+  private Environment environment;
+  private final Map<Expr, VarLocation> locals = new HashMap<>();
+
+  public static class VarLocation {
+    public final int distance;
+    public final int index;
+
+    public VarLocation(int distance, int index) {
+      this.distance = distance;
+      this.index = index;
+    }
+  }
 
   public Interpreter() {
-    globals.define("clock", new LoxCallable() {
+    globals.put("clock", new LoxCallable() {
       @Override
       public int arity() { return 0; }
 
@@ -37,11 +47,15 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   public Object visitAssignExpr(Expr.Assign expr) {
     Object value = evaluate(expr.value);
 
-    Integer distance = locals.get(expr);
-    if (distance != null) {
-      environment.assignAt(distance, expr.name, value);
+    VarLocation location = locals.get(expr);
+    if (location != null) {
+      environment.assignAt(location, value);
     } else {
-      globals.assign(expr.name, value);
+      if (globals.containsKey(expr.name.lexeme)) {
+        globals.put(expr.name.lexeme, value);
+      } else {
+        throw new RuntimeError(expr.name, "Undefined variable " + expr.name.lexeme);
+      }
     }
 
     return value;
@@ -158,11 +172,15 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   }
 
   private Object lookupVariable(Token name, Expr expr) {
-    Integer distance = locals.get(expr);
-    if (distance != null) {
-      return environment.getAt(distance, name.lexeme);
+    VarLocation location = locals.get(expr);
+    if (location != null) {
+      return environment.getAt(location);
     } else {
-      return globals.get(name);
+      if (globals.containsKey(name.lexeme)) {
+        return globals.get(name.lexeme);
+      } else {
+        throw new RuntimeError(name, "Undefined variable " + name.lexeme);
+      }
     }
   }
 
@@ -199,7 +217,11 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   @Override
   public Void visitFunctionStmt(Stmt.Function stmt) {
     LoxFunction function = new LoxFunction(stmt, environment);
-    environment.define(stmt.name.lexeme, function);
+    if (environment != null) {
+      environment.define(stmt.name.lexeme, function);
+    } else {
+      globals.put(stmt.name.lexeme, function);
+    }
     return null;
   }
 
@@ -210,7 +232,12 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
       value = evaluate(stmt.initializer);
     }
 
-    environment.define(stmt.name.lexeme, value);
+    if (environment != null) {
+      environment.define(stmt.name.lexeme, value);
+    } else {
+      globals.put(stmt.name.lexeme, value);
+    }
+
     return null;
   }
 
@@ -284,7 +311,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
   }
 
-  public void resolve(Expr expr, int depth) {
-    locals.put(expr, depth);
+  public void resolve(Expr expr, int depth, int index) {
+    locals.put(expr, new VarLocation(depth, index));
   }
 }
