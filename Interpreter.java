@@ -178,6 +178,11 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     return lookupVariable(expr.name, expr);
   }
 
+  @Override
+  public Object visitThisExpr(Expr.This expr) {
+    return lookupVariable(expr.keyword, expr);
+  }
+
   private Object lookupVariable(Token name, Expr expr) {
     Integer distance = locals.get(expr);
     if (distance != null) {
